@@ -18,6 +18,7 @@ async function sendMessage() {
   }
 
   
+
   appendMessage(userMessage, "user");
   inputField.value = ""; // Clear input field
   displayTypingIndicator();

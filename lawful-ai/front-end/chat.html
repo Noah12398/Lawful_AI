@@ -33,28 +33,30 @@
                             <!-- Add more languages as needed -->
                         </select>
                     </div>
-                    <div class="dropdown-item">
-                        <span class="material-icons">volume_up</span>
-                        <label for="tts-toggle">Text to Speech</label>
-                        <input type="checkbox" id="ttsToggle" />
-                    </div>
+                    
 
                 </div>
             </div>
         </div>
 
         <!-- Chat Container -->
-        <div id="chat-container">
-            <div id="chat-window">
-                <div id="welcome-message" class="center-message">Welcome! How can I assist you today?</div>
-            </div>
-            <div id="input-container">
-                <input type="text" id="user-input" placeholder="Type your message..." />
-                <button id="send-btn">Send</button>
-            </div>
-            <!-- Response Display -->
-
+        <!-- Chat Container -->
+<div id="chat-container">
+    <div id="chat-window">
+        <div id="welcome-message" class="center-message">Welcome! How can I assist you today?</div>
+    </div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." />
+        <button id="send-btn">Send</button>
+        
+        <div class="dropdown-item">
+            <span class="material-icons">volume_up</span>
+            <label for="tts-toggle"></label>
+            <input type="checkbox" id="ttsToggle" />
         </div>
+    </div>
+</div>
+
     </div>
 
     <script src="js/script.js"></script>
