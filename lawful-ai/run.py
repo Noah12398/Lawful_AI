@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, send_file
+import uuid
+from flask import Flask, request, jsonify, send_file, send_from_directory
 import os
 import json
 import google.generativeai as genai
@@ -14,7 +15,6 @@ CORS(app)  # Allow all origins, adjust for security if needed
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GENAI_API_KEY"))
-
 
 @app.route('/')
 def home():
@@ -45,6 +45,10 @@ def chatbot_response(user_input):
         return response.text.replace("**", "").replace("*", "").replace(".",".<br>")
     except Exception as e:
         return f"Error generating response: {str(e)}"
+    
+    
+if not os.path.exists("static"):
+    os.makedirs("static")
 
 @app.route('/process', methods=['POST'])
 def process_input():
@@ -55,30 +59,29 @@ def process_input():
     if not user_message:
         return jsonify({"response": "No input provided"}), 400
 
-    bot_response = chatbot_response(user_message)
+    bot_response = chatbot_response(user_message)  # Assume this function generates the chatbot response
     
     if tts_enabled:
         try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init()
-            
-            # Generate TTS audio
-            audio_path = 'output.mp3'
-            tts = gTTS(bot_response)
-            tts.save(audio_path)
-            
-            # Play the generated audio
-            pygame.mixer.music.load(audio_path)
-            pygame.mixer.music.play()
-            
-            # Return audio file URL
-            return jsonify({"response": bot_response, "audio_url": f"http://{os.getenv('RENDER_EXTERNAL_URL')}/audio"}), 200
+            filename = f"tts_output_{uuid.uuid4().hex}.mp3"
+            filepath = os.path.join("static", filename)
+
+            # Generate TTS and save the file
+            tts = gTTS(text=bot_response, lang='en')
+            tts.save(filepath)
+
+            # Return the audio URL to the client
+            return jsonify({"response": bot_response, "audio_url": f"/static/{filename}"})
+        
         except Exception as e:
             print(f"Error occurred during TTS: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
     return jsonify({"response": bot_response})
 
+@app.route('/static/<path:filename>')
+def serve_audio(filename):
+    return send_from_directory("static", filename)
 @app.route('/audio', methods=['GET'])
 def get_audio():
     audio_path = 'output.mp3'

@@ -4,11 +4,11 @@ document.getElementById("user-input").addEventListener("keydown", function (even
     sendMessage();
   }
 });
-
 async function sendMessage() {
   const inputField = document.getElementById("user-input");
   const userMessage = inputField.value.trim();
   const welcomeMessage = document.getElementById("welcome-message");
+  const audioPlayer = document.getElementById("audioPlayer"); // Audio player element
 
   // If user sends an empty message, return without doing anything
   if (userMessage === "") return;
@@ -16,8 +16,6 @@ async function sendMessage() {
   if (welcomeMessage) {
     welcomeMessage.style.display = "none";
   }
-
-  
 
   appendMessage(userMessage, "user");
   inputField.value = ""; // Clear input field
@@ -27,8 +25,7 @@ async function sendMessage() {
   // Handle language selection
   const selectedLanguage = document.getElementById("language-select").value;
   console.log("Selected Language:", selectedLanguage);
-  // You can add functionality to change language here if needed
-
+  
   // Handle Text-to-Speech (TTS) functionality
   const ttsEnabled = document.getElementById("ttsToggle").checked;
   console.log("Text-to-Speech Enabled:", ttsEnabled);
@@ -52,6 +49,13 @@ async function sendMessage() {
       appendMessage("Error: Unable to process your request.", "bot");
     }
 
+    // If TTS is enabled and an audio URL is received, play the audio
+    if (ttsEnabled && data.audio_url) {
+      audioPlayer.src = data.audio_url;
+      audioPlayer.style.display = "block";
+      audioPlayer.play();
+    }
+
     scrollChatWindowToBottom();
   } catch (error) {
     console.error("Error during communication with Flask:", error);
@@ -60,6 +64,7 @@ async function sendMessage() {
     alert("Error: " + error.message); // Show error message in a popup
   }
 }
+
 
 function appendMessage(message, sender) {
   const chatWindow = document.getElementById("chat-window");
