@@ -91,7 +91,12 @@ def process_input():
 
 @app.route('/static/<path:filename>')
 def serve_audio(filename):
-    return send_from_directory("static", filename)
+    file_path = os.path.join("static", filename)
+    if os.path.exists(file_path):
+        return send_from_directory("static", filename)
+    else:
+        print(f"File not found: {file_path}")
+        return jsonify({"error": "Audio file not found"}), 404
 
 @app.route('/audio', methods=['GET'])
 def get_audio():
