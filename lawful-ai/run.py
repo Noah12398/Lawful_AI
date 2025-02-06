@@ -8,17 +8,24 @@ from flask_cors import CORS
 import pygame
 from flask import render_template
 from dotenv import load_dotenv 
+
 # Initialize Flask app and CORS
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
 CORS(app)  # Allow all origins, adjust for security if needed
 load_dotenv()
 
+# Configure API Key for Generative AI
 genai.configure(api_key=os.getenv("GENAI_API_KEY"))
+
+# Ensure the static folder exists
+if not os.path.exists("static"):
+    os.makedirs("static")
 
 @app.route('/')
 def home():
     return render_template('index.html')
+
 @app.route('/chat.html')
 def chat():
     return render_template('chat.html')
@@ -45,10 +52,6 @@ def chatbot_response(user_input):
         return response.text.replace("**", "").replace("*", "").replace(".",".<br>")
     except Exception as e:
         return f"Error generating response: {str(e)}"
-    
-    
-if not os.path.exists("static"):
-    os.makedirs("static")
 
 @app.route('/process', methods=['POST'])
 def process_input():
@@ -59,16 +62,23 @@ def process_input():
     if not user_message:
         return jsonify({"response": "No input provided"}), 400
 
+    # Generate the chatbot response
     bot_response = chatbot_response(user_message)  # Assume this function generates the chatbot response
     
     if tts_enabled:
         try:
+            # Generate unique filename for the TTS file
             filename = f"tts_output_{uuid.uuid4().hex}.mp3"
             filepath = os.path.join("static", filename)
 
             # Generate TTS and save the file
             tts = gTTS(text=bot_response, lang='en')
             tts.save(filepath)
+            try:
+                tts.save(filepath)
+                print(f"Audio file saved at {filepath}")
+            except Exception as e:
+                print(f"Error saving TTS file: {str(e)}")
 
             # Return the audio URL to the client
             return jsonify({"response": bot_response, "audio_url": f"/static/{filename}"})
@@ -82,9 +92,10 @@ def process_input():
 @app.route('/static/<path:filename>')
 def serve_audio(filename):
     return send_from_directory("static", filename)
+
 @app.route('/audio', methods=['GET'])
 def get_audio():
-    audio_path = 'output.mp3'
+    audio_path = 'static/output.mp3'  # Ensure this path is correct
     if os.path.exists(audio_path):
         return send_file(audio_path, mimetype='audio/mpeg')
     return jsonify({"error": "Audio file not found"}), 404
@@ -92,4 +103,4 @@ def get_audio():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))  # Default to 5000 if no PORT is set in .env
     app.run(host="0.0.0.0", port=port)
-
+    
