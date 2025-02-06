@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)  # Allow all origins, adjust for security if needed
 
 # Configure Generative AI with API key
-genai.configure(api_key="")
+genai.configure(api_key="API_KEY")
 
 # Function to generate chatbot response using the fine-tuned model
 def chatbot_response(user_input):
