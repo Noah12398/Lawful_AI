@@ -71,7 +71,7 @@ def process_input():
             pygame.mixer.music.play()
             
             # Return audio file URL
-            return jsonify({"response": bot_response, "audio_url": f"http://127.0.0.1:5000/audio"}), 200
+            return jsonify({"response": bot_response, "audio_url": f"http://{os.getenv('RENDER_EXTERNAL_URL')}/audio"}), 200
         except Exception as e:
             print(f"Error occurred during TTS: {str(e)}")
             return jsonify({"error": str(e)}), 500
@@ -85,5 +85,6 @@ def get_audio():
         return send_file(audio_path, mimetype='audio/mpeg')
     return jsonify({"error": "Audio file not found"}), 404
 
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8080))  # Default to 8080 if no PORT is set
+    app.run(host="0.0.0.0", port=port)
