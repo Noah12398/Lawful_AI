@@ -5,13 +5,22 @@ import google.generativeai as genai
 from gtts import gTTS
 from flask_cors import CORS
 import pygame
+from flask import render_template
+
 
 # Initialize Flask app and CORS
 app = Flask(__name__)
 CORS(app)  # Allow all origins, adjust for security if needed
 
 # Configure Generative AI with API key
-genai.configure(api_key="")
+genai.configure(api_key=GENAI_API_KEY)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+@app.route('/chat.html')
+def chat():
+    return render_template('chat.html')
 
 # Function to generate chatbot response using the fine-tuned model
 def chatbot_response(user_input):
@@ -32,7 +41,7 @@ def chatbot_response(user_input):
         # Send the user input directly to the model
         response = model.generate_content(f"Act as a lawyer and provide advice on {user_input}")
         
-        return response.text.replace("**", "").replace("*", "")
+        return response.text.replace("**", "").replace("*", "").replace(".",".<br>")
     except Exception as e:
         return f"Error generating response: {str(e)}"
 
