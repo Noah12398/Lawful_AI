@@ -6,14 +6,15 @@ from gtts import gTTS
 from flask_cors import CORS
 import pygame
 from flask import render_template
-
-
+from dotenv import load_dotenv 
 # Initialize Flask app and CORS
 app = Flask(__name__)
-CORS(app)  # Allow all origins, adjust for security if needed
 
-# Configure Generative AI with API key
-genai.configure(api_key=GENAI_API_KEY)
+CORS(app)  # Allow all origins, adjust for security if needed
+load_dotenv()
+
+genai.configure(api_key=os.getenv("GENAI_API_KEY"))
+
 
 @app.route('/')
 def home():
