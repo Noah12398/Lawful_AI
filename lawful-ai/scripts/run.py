@@ -76,5 +76,5 @@ def get_audio():
         return send_file(audio_path, mimetype='audio/mpeg')
     return jsonify({"error": "Audio file not found"}), 404
 
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
