@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)  # Allow all origins, adjust for security if needed
 
 # Configure Generative AI with API key
-genai.configure(api_key=GENAI_API_KEY)
+genai.configure(api_key=os.getenv("GENAI_API_KEY"))
 
 @app.route('/')
 def home():
