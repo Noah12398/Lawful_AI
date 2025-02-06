@@ -71,6 +71,10 @@ def process_input():
             filename = f"tts_output_{uuid.uuid4().hex}.mp3"
             filepath = os.path.join("static", filename)
 
+            # Log the file path to see if it's correct
+            print(f"Audio file saved at {filepath}")
+
+        
             # Generate TTS and save the file
             tts = gTTS(text=bot_response, lang='en')
             tts.save(filepath)
