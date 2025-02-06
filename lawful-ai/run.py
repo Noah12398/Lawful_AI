@@ -86,5 +86,4 @@ def get_audio():
     return jsonify({"error": "Audio file not found"}), 404
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))  # Default to 8080 if no PORT is set
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
