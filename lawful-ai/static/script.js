@@ -5,12 +5,13 @@ document.getElementById("user-input").addEventListener("keydown", function (even
   }
 });
 
-
 async function sendMessage() {
   const inputField = document.getElementById("user-input");
   const userMessage = inputField.value.trim();
   const welcomeMessage = document.getElementById("welcome-message");
   const audioPlayer = document.getElementById("audioPlayer"); // Audio player element
+  const languageSelector = document.getElementById("language-select");
+  const selectedLanguage = languageSelector.value; // Get the selected language
 
   if (userMessage === "") return;
 
@@ -25,6 +26,7 @@ async function sendMessage() {
 
   const ttsEnabled = document.getElementById("ttsToggle").checked;
   console.log("Text-to-Speech Enabled:", ttsEnabled);
+  console.log("Selected Language:", selectedLanguage); // Log the selected language
 
   try {
     const response = await fetch("/process", {
@@ -32,7 +34,11 @@ async function sendMessage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: userMessage, tts: ttsEnabled }),
+      body: JSON.stringify({
+        text: userMessage,
+        language: selectedLanguage, // Send language with request
+        tts: ttsEnabled,
+      }),
     });
 
     // Check response type
@@ -73,8 +79,6 @@ async function sendMessage() {
   }
 }
 
-
-
 function appendMessage(message, sender) {
   const chatWindow = document.getElementById("chat-window");
   const messageElement = document.createElement("div");
@@ -113,8 +117,7 @@ document.getElementById("dropdown-btn").addEventListener("click", function () {
 });
 
 // Handle Text-to-Speech Toggle
-document.getElementById("ttsToggle").addEventListener("change", function () { 
-  
+document.getElementById("ttsToggle").addEventListener("change", function () {
   const ttsEnabled = this.checked;
   if (ttsEnabled) {
     console.log("Text to Speech Enabled");

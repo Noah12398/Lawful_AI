@@ -7,7 +7,7 @@ from gtts import gTTS
 from flask_cors import CORS
 import pygame
 from flask import render_template
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 import io  # Add this at the top
 
 # Initialize Flask app and CORS
@@ -32,7 +32,7 @@ def chat():
     return render_template('chat.html')
 
 # Function to generate chatbot response using the fine-tuned model
-def chatbot_response(user_input):
+def chatbot_response(user_input, language):
     try:
         # Use the GenerativeModel class to generate the response
         generation_config = {
@@ -41,35 +41,40 @@ def chatbot_response(user_input):
             "top_k": 40,
             "max_output_tokens": 8192,
         }
-        
+
         model = genai.GenerativeModel(
             model_name="tunedModels/copy-of-finalefinal-mm6hnii9n2pp",
             generation_config=generation_config,
         )
-        
+
         # Send the user input directly to the model
         response = model.generate_content(f"Act as a lawyer and provide advice on {user_input}")
         
+        # Replace sensitive symbols and adjust formatting
         return response.text.replace("**", "").replace("*", "").replace(".",".<br>")
     except Exception as e:
         return f"Error generating response: {str(e)}"
+
 last_response_text = ""
+
 @app.route('/process', methods=['POST'])
 def process_input():
     global last_response_text
     data = request.get_json()
     user_message = data.get('text', '')
     tts_enabled = data.get('tts', False)
+    selected_language = data.get('language', 'en')  # Capture the selected language, default to English
 
     if not user_message:
         return jsonify({"response": "No input provided"}), 400
 
-    bot_response = chatbot_response(user_message)  # Your chatbot logic
+    bot_response = chatbot_response(user_message, selected_language)  # Pass selected language to response generation
     last_response_text = bot_response  # Store response text
 
     if tts_enabled:
         try:
-            tts = gTTS(text=bot_response, lang='en')
+            # Check if the selected language is supported by gTTS
+            tts = gTTS(text=bot_response, lang=selected_language)
             audio_io = io.BytesIO()
             tts.write_to_fp(audio_io)  # Correct way to save to BytesIO
             audio_io.seek(0)  # Rewind BytesIO before sending
@@ -84,23 +89,7 @@ def process_input():
 def get_last_response():
     return jsonify({"response": last_response_text})
 
-@app.route('/static/<path:filename>')
-def serve_audio(filename):
-    file_path = os.path.join("static", filename)
-    if os.path.exists(file_path):
-        return send_from_directory("static", filename)
-    else:
-        print(f"File not found: {file_path}")
-        return jsonify({"error": "Audio file not found"}), 404
-
-@app.route('/audio', methods=['GET'])
-def get_audio():
-    audio_path = 'static/output.mp3'  # Ensure this path is correct
-    if os.path.exists(audio_path):
-        return send_file(audio_path, mimetype='audio/mpeg')
-    return jsonify({"error": "Audio file not found"}), 404
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))  # Default to 5000 if no PORT is set in .env
     app.run(host="0.0.0.0", port=port)
-    
