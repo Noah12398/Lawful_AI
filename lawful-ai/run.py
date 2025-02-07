@@ -8,6 +8,7 @@ from flask_cors import CORS
 import pygame
 from flask import render_template
 from dotenv import load_dotenv 
+import io  # Add this at the top
 
 # Initialize Flask app and CORS
 app = Flask(__name__, static_folder="static")
@@ -52,46 +53,36 @@ def chatbot_response(user_input):
         return response.text.replace("**", "").replace("*", "").replace(".",".<br>")
     except Exception as e:
         return f"Error generating response: {str(e)}"
-
+last_response_text = ""
 @app.route('/process', methods=['POST'])
 def process_input():
+    global last_response_text
     data = request.get_json()
     user_message = data.get('text', '')
     tts_enabled = data.get('tts', False)
-    
+
     if not user_message:
         return jsonify({"response": "No input provided"}), 400
 
-    # Generate the chatbot response
-    bot_response = chatbot_response(user_message)  # Assume this function generates the chatbot response
-    
+    bot_response = chatbot_response(user_message)  # Your chatbot logic
+    last_response_text = bot_response  # Store response text
+
     if tts_enabled:
         try:
-            # Generate unique filename for the TTS file
-            filename = f"tts_output_{uuid.uuid4().hex}.mp3"
-            filepath = os.path.join("static", filename)
-
-            # Log the file path to see if it's correct
-            print(f"Audio file saved at {filepath}")
-
-        
-            # Generate TTS and save the file
             tts = gTTS(text=bot_response, lang='en')
-            tts.save(filepath)
-            try:
-                tts.save(filepath)
-                print(f"Audio file saved at {filepath}")
-            except Exception as e:
-                print(f"Error saving TTS file: {str(e)}")
-
-            # Return the audio URL to the client
-            return jsonify({"response": bot_response, "audio_url": f"/static/{filename}"})
-        
+            audio_io = io.BytesIO()
+            tts.write_to_fp(audio_io)  # Correct way to save to BytesIO
+            audio_io.seek(0)  # Rewind BytesIO before sending
+            return send_file(audio_io, mimetype="audio/mpeg", as_attachment=False)
         except Exception as e:
             print(f"Error occurred during TTS: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
     return jsonify({"response": bot_response})
+
+@app.route('/last_response', methods=['GET'])
+def get_last_response():
+    return jsonify({"response": last_response_text})
 
 @app.route('/static/<path:filename>')
 def serve_audio(filename):

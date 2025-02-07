@@ -4,13 +4,14 @@ document.getElementById("user-input").addEventListener("keydown", function (even
     sendMessage();
   }
 });
+
+
 async function sendMessage() {
   const inputField = document.getElementById("user-input");
   const userMessage = inputField.value.trim();
   const welcomeMessage = document.getElementById("welcome-message");
   const audioPlayer = document.getElementById("audioPlayer"); // Audio player element
 
-  // If user sends an empty message, return without doing anything
   if (userMessage === "") return;
 
   if (welcomeMessage) {
@@ -22,16 +23,10 @@ async function sendMessage() {
   displayTypingIndicator();
   scrollChatWindowToBottom();
 
-  // Handle language selection
-  const selectedLanguage = document.getElementById("language-select").value;
-  console.log("Selected Language:", selectedLanguage);
-  
-  // Handle Text-to-Speech (TTS) functionality
   const ttsEnabled = document.getElementById("ttsToggle").checked;
   console.log("Text-to-Speech Enabled:", ttsEnabled);
 
   try {
-    // Send user input to Flask backend
     const response = await fetch("/process", {
       method: "POST",
       headers: {
@@ -40,20 +35,33 @@ async function sendMessage() {
       body: JSON.stringify({ text: userMessage, tts: ttsEnabled }),
     });
 
-    const data = await response.json();
-    removeTypingIndicator();
+    // Check response type
+    const contentType = response.headers.get("Content-Type");
 
-    if (data.response) {
-      appendMessage(data.response, "bot");
-    } else {
-      appendMessage("Error: Unable to process your request.", "bot");
-    }
+    if (ttsEnabled && contentType.includes("audio/mpeg")) {
+      // Extract text response from the JSON payload
+      const textResponse = await fetch("/last_response"); // Fetch last text response
+      const textData = await textResponse.json();
+      removeTypingIndicator();
+      appendMessage(textData.response, "bot"); // Append bot text message
 
-    // If TTS is enabled and an audio URL is received, play the audio
-    if (ttsEnabled && data.audio_url) {
-      audioPlayer.src = data.audio_url;
+      // Handle TTS audio response
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      console.log("Playing TTS Audio:", audioUrl);
+      audioPlayer.src = audioUrl;
       audioPlayer.style.display = "block";
       audioPlayer.play();
+    } else {
+      // Handle normal text response
+      const data = await response.json();
+      removeTypingIndicator();
+
+      if (data.response) {
+        appendMessage(data.response, "bot");
+      } else {
+        appendMessage("Error: Unable to process your request.", "bot");
+      }
     }
 
     scrollChatWindowToBottom();
@@ -61,9 +69,10 @@ async function sendMessage() {
     console.error("Error during communication with Flask:", error);
     removeTypingIndicator();
     appendMessage("Error: Unable to process your request.", "bot");
-    alert("Error: " + error.message); // Show error message in a popup
+    alert("Error: " + error.message);
   }
 }
+
 
 
 function appendMessage(message, sender) {
