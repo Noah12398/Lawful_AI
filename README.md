@@ -1,5 +1,7 @@
 **Lawful AI**
 
+**The Demo Link:-** https://lawful-ai.onrender.com/
+
 **Home Screen**
 
 ![Screenshot 2025-01-13 230333](https://github.com/user-attachments/assets/d1ea0500-6a22-4ee9-8d9f-3630d348e59f)
